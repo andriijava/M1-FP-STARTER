@@ -22,11 +22,12 @@ class MainTest {
     private static final String ORWELL_UA = loadResource("orwell.txt");
 
     private static String loadResource(String resourceName) {
-        try {
-            return Files.readString(Path.of(
-                    MainTest.class.getResource("/" + resourceName).toURI()
-            ));
-        } catch (IOException | java.net.URISyntaxException e) {
+        try (var in = MainTest.class.getResourceAsStream("/" + resourceName)) {
+            if (in == null) {
+                throw new RuntimeException("Test resource not found on classpath: " + resourceName);
+            }
+            return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (IOException e) {
             throw new RuntimeException("Failed to load test resource: " + resourceName, e);
         }
     }
@@ -396,50 +397,22 @@ class MainTest {
             assertDoesNotThrow(() -> Main.main(params), "Exception was thrown while processing a non-existent file path.");
         }
 
-        @Test
-        @DisplayName("Missing -k is handled (no new file created, no exception)")
-        void missingKey() {
+        @ParameterizedTest(name = "{0}")
+        @CsvSource(delimiter = '|', textBlock = """
+                missing -k       | -e -f {path}
+                missing -f       | -e -k 5
+                missing command  | -k 5 -f {path}
+                unknown flag     | -e -x -k 5 -f {path}
+                non-numeric key  | -e -k abc -f {path}
+                """)
+        @DisplayName("Invalid argument sets are handled (no exception, no new file)")
+        void invalidArgsHandled(String scenario, String argsSpec) {
+            String[] args = argsSpec.trim()
+                    .replace("{path}", inputFilePathEN.toString())
+                    .split("\\s+");
             List<Path> before = listFiles(tempDir);
-            String[] params = {ENCRYPT_COMMAND, "-f", inputFilePathEN.toString()};
-            assertDoesNotThrow(() -> Main.main(params));
-            assertEquals(before, listFiles(tempDir),
-                    "No new file should be created when -k is missing");
-        }
-
-        @Test
-        @DisplayName("Missing -f is handled")
-        void missingFile() {
-            List<Path> before = listFiles(tempDir);
-            String[] params = {ENCRYPT_COMMAND, "-k", "5"};
-            assertDoesNotThrow(() -> Main.main(params));
-            assertEquals(before, listFiles(tempDir));
-        }
-
-        @Test
-        @DisplayName("Missing command is handled")
-        void missingCommand() {
-            List<Path> before = listFiles(tempDir);
-            String[] params = {"-k", "5", "-f", inputFilePathEN.toString()};
-            assertDoesNotThrow(() -> Main.main(params));
-            assertEquals(before, listFiles(tempDir));
-        }
-
-        @Test
-        @DisplayName("Unknown flag is handled")
-        void unknownFlag() {
-            List<Path> before = listFiles(tempDir);
-            String[] params = {ENCRYPT_COMMAND, "-x", "-k", "5", "-f", inputFilePathEN.toString()};
-            assertDoesNotThrow(() -> Main.main(params));
-            assertEquals(before, listFiles(tempDir));
-        }
-
-        @Test
-        @DisplayName("Non-numeric key is handled")
-        void nonNumericKey() {
-            List<Path> before = listFiles(tempDir);
-            String[] params = {ENCRYPT_COMMAND, "-k", "abc", "-f", inputFilePathEN.toString()};
-            assertDoesNotThrow(() -> Main.main(params));
-            assertEquals(before, listFiles(tempDir));
+            assertDoesNotThrow(() -> Main.main(args), scenario);
+            assertEquals(before, listFiles(tempDir), scenario);
         }
     }
 }
