@@ -19,8 +19,8 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Run tests with Maven
-        run: mvn --batch-mode --update-snapshots test
+      - name: Run tests and package jar
+        run: mvn --batch-mode --update-snapshots package
 
       - name: Tests Report 1
         uses: EnricoMi/publish-unit-test-result-action@v2
