@@ -22,6 +22,14 @@ public class Cypher {
         return builder.toString();
     }
 
+    /**
+     * Reverse of {@link #encrypt}. The relationship to encrypt is the key
+     * to keeping this short.
+     */
+    public String decrypt(String input, int key) {
+        throw new UnsupportedOperationException("TODO: implement decrypt");
+    }
+
     private Character processSymbol(char symbol, ArrayList<Character> rotatedAlphabet) {
         if (!originalAlphabet.contains(symbol)) {
             return symbol;
