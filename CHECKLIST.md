@@ -38,15 +38,15 @@ Most of these already pass thanks to the existing `encrypt` implementation. Re-v
 
 Verify everything: `./mvnw test`
 
-## 5. (Bonus) Ukrainian alphabet
+## 5. Ukrainian alphabet
 
-The PDF lists Ukrainian-language support as the easiest bonus. Tests for it exist already, gated by a system property:
+`MainTest$UkrainianLanguageTest` is always enabled in this fork — Ukrainian-language support is part of the required test path, not an opt-in.
 
 - **Files:** `src/main/java/ua/com/javarush/gnew/language/Language.java` (subclass it for Ukrainian), then refactor `Cypher` to accept a `Language`.
 - **Watch:** `MainTest$UkrainianLanguageTest`
 - **Hint:** The 33-letter Ukrainian alphabet is А Б В Г Ґ Д Е Є Ж З И І Ї Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ь Ю Я (plus lowercase).
 
-Verify: `./mvnw -DukrainianLanguageTest=true -Dtest='MainTest$UkrainianLanguageTest' test`
+Verify: `./mvnw -Dtest='MainTest$UkrainianLanguageTest' test`
 
 ## 6. Build the jar for your Release
 

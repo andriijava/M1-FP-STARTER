@@ -15,7 +15,6 @@ The starter ships with visible TODO seams: `Cypher.decrypt`, `BruteForce.bruteFo
 - Run a single test class: `./mvnw -Dtest=CypherTest test`
 - Run a single nested group: `./mvnw -Dtest='MainTest$EnglishTests' test`
 - Run a single test method: `./mvnw -Dtest='MainTest$EnglishTests#encrypt' test`
-- Enable Ukrainian-bonus tests: `./mvnw -DukrainianLanguageTest=true test`
 - Package the runnable jar: `./mvnw package` (output `target/GNEW-M1-FP-1.0-SNAPSHOT.jar`)
 - Run the jar: `java -jar target/GNEW-M1-FP-1.0-SNAPSHOT.jar -e -k 5 -f path.txt`
 - CI: `.github/workflows/run_tests.yaml` runs `mvn package` on every push.
@@ -48,7 +47,7 @@ Single-module Maven project, package root `ua.com.javarush.gnew`:
 - `file.EncryptedFileNamer` — owns the `[ENCRYPTED]` / `[DECRYPTED]` filename suffix rules.
 - `file.FileManager` — thin wrapper around `Files.readString` / `Files.writeString`.
 - `runner.ArgumentsParser` → `runner.RunOptions` → consumed by `Main`. `Command` is an enum (`ENCRYPT`, `DECRYPT`, `BRUTEFORCE`).
-- `language.Language` + `language.EnglishLanguage` — minimal extension point for the optional Ukrainian-alphabet bonus. The core `Cypher` does NOT consume `Language` — kept hard-coded by design.
+- `language.Language` + `language.EnglishLanguage` — extension point for the Ukrainian-alphabet support (required, not bonus). The core `Cypher` does NOT consume `Language` yet — students refactor it to accept one.
 
 ## Test suite shape
 
@@ -59,7 +58,7 @@ Nested groups in `MainTest`:
 - `EnglishTests` — Hamlet round-trip + brute force.
 - `EncryptEdgeCases` — empty file, key=0/52/53/-52, special chars, multiline.
 - `OriginalFileSafety` — input file is unchanged after encrypt.
-- `UkrainianLanguageTest` — gated on `-DukrainianLanguageTest=true` system property.
+- `UkrainianLanguageTest` — always enabled. Students must implement Ukrainian alphabet support to make these pass.
 - `ValidationTests` — missing/unknown flags, non-numeric keys, non-existent file. All assert via "no new file appears in `@TempDir`".
 
 Focused unit-test classes (don't go through `Main.main`):

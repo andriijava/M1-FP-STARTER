@@ -34,7 +34,6 @@ See `CHECKLIST.md` for the test-driven view of these.
 ```
 ./mvnw test                                   # run the whole test suite
 ./mvnw -Dtest=CypherTest test                 # run one test class
-./mvnw -DukrainianLanguageTest=true test      # also run the Ukrainian-bonus tests
 ./mvnw package                                # build target/GNEW-M1-FP-1.0-SNAPSHOT.jar
 ```
 
