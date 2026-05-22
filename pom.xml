@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>ua.com.javarush.gnew</groupId>
-    <artifactId>GNEW-M1-FP</artifactId>
+    <groupId>ua.com.javarush.j4</groupId>
+    <artifactId>J4-M1-FP</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <properties>
@@ -42,7 +42,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>ua.com.javarush.gnew.Main</mainClass>
+                            <mainClass>ua.com.javarush.j4.Main</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

@@ -1,61 +1,145 @@
-# Implementation checklist
+# Перелік завдань
 
-The starter ships stubs for everything that's still your work. Each section below names the file to edit, the test that proves it works, and a one-line hint. Work top-to-bottom — items build on each other.
+Стартовий репозиторій містить порожній `Main` і повний набір тестів у `MainTest`. Твоя задача — реалізувати усе так, щоб тести стали зеленими. Кроки впорядковані так, що кожен наступний спирається на попередній.
 
-The canonical spec is `src/main/resources/project-description.pdf`. This checklist is just the test-driven view of it.
+Канонічне технічне завдання — `src/main/resources/project-description.pdf`. Цей чеклист — лише його тест-орієнтоване відображення.
 
-## 1. Implement `Cypher.decrypt`
+## Як читати помилки тестів
 
-- **File:** `src/main/java/ua/com/javarush/gnew/crypto/Cypher.java`
-- **Watch:** `CypherTest` (add your own decrypt tests here), `MainTest$EnglishTests#decrypt`, `MainTest$EnglishTests#decryptedFileTextValidate`
-- **Hint:** `encrypt(text, key)` and `decrypt(text, key)` are related by something simple. Look at the existing `encrypt` for the pattern.
+`MainTest.execute(...)` оформлює типові помилки у підказку з номером кроку CHECKLIST. Наприклад:
 
-Verify: `./mvnw -Dtest='CypherTest,MainTest$EnglishTests#decrypt' test`
+> Команда '-d' (розшифрування). Див. CHECKLIST крок 2 — після виконання у tempDir не з'явилось жодного нового файлу.
 
-## 2. Wire `DECRYPT` into `Main`
+Тобто в полі повідомлення помилки одразу видно, який крок іще не зроблено. Якщо бачиш `UnsupportedOperationException` — реалізація відповідної гілки `Main` ще кидає заглушку.
 
-- **File:** `src/main/java/ua/com/javarush/gnew/Main.java`
-- **Watch:** `MainTest$FileTests$DecryptFileTests`, `MainTest$FileTests$DecryptFilenameTransformation`
-- **Hint:** Mirror the `ENCRYPT` branch. Use `EncryptedFileNamer.forDecrypted` for the output filename — it handles the `[ENCRYPTED]` → `[DECRYPTED]` swap.
+Запускати тести:
 
-Verify: `./mvnw -Dtest='MainTest$FileTests$DecryptFileTests,MainTest$FileTests$DecryptFilenameTransformation' test`
-
-## 3. Implement `BruteForce.bruteForce` and wire it into `Main`
-
-- **Files:** `src/main/java/ua/com/javarush/gnew/crypto/BruteForce.java` and `Main.java`
-- **Watch:** `MainTest$EnglishTests#bruteForceEN`, `MainTest$FileTests$BruteForceFileTests`
-- **Hint:** Try every plausible key, score each candidate output, pick the best. Two textbook ways to score: (a) count occurrences of common words like "the", "and", "of"; (b) compare letter-frequency distribution against expected English.
-
-Verify: `./mvnw -Dtest='MainTest$EnglishTests#bruteForceEN' test`
-
-## 4. Cover edge cases
-
-Most of these already pass thanks to the existing `encrypt` implementation. Re-verify after you add decrypt:
-
-- `MainTest$EncryptEdgeCases` — empty file, key=0, key=52, special chars, multiline.
-- `MainTest$OriginalFileSafety` — encrypt doesn't modify the input file.
-- `MainTest$ValidationTests` — missing flags, unknown flags, non-numeric key.
-
-Verify everything: `./mvnw test`
-
-## 5. Ukrainian alphabet
-
-`MainTest$UkrainianLanguageTest` is always enabled in this fork — Ukrainian-language support is part of the required test path, not an opt-in.
-
-- **Files:** `src/main/java/ua/com/javarush/gnew/language/Language.java` (subclass it for Ukrainian), then refactor `Cypher` to accept a `Language`.
-- **Watch:** `MainTest$UkrainianLanguageTest`
-- **Hint:** The 33-letter Ukrainian alphabet is А Б В Г Ґ Д Е Є Ж З И І Ї Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ь Ю Я (plus lowercase).
-
-Verify: `./mvnw -Dtest='MainTest$UkrainianLanguageTest' test`
-
-## 6. Build the jar for your Release
-
-`./mvnw package` produces `target/GNEW-M1-FP-1.0-SNAPSHOT.jar`. Test it manually:
-
-```
-java -jar target/GNEW-M1-FP-1.0-SNAPSHOT.jar -e -k 5 -f src/main/resources/input.txt
-java -jar target/GNEW-M1-FP-1.0-SNAPSHOT.jar -d -k 5 -f "src/main/resources/input [ENCRYPTED].txt"
-java -jar target/GNEW-M1-FP-1.0-SNAPSHOT.jar -bf -f "src/main/resources/input [ENCRYPTED].txt"
+```bash
+./mvnw test                                       # усі тести
+./mvnw test -Dtest='MainTest$FileTests'           # одна група
+./mvnw test -Dtest='MainTest$LanguageTests#encrypt' # один параметризований сценарій
 ```
 
-Upload the jar to GitHub Releases on your fork.
+---
+
+## Крок 1. Каркас `Main` + шифрування (`-e`)
+
+**Що зробити:**
+
+- Розібрати аргументи командного рядка: `-e | -d | -bf`, `-k <ціле>`, `-f <шлях>`. Порядок аргументів довільний. На цьому етапі досить, щоб парсер правильно сприймав коректні набори — обробку невалідних залишити на крок 5.
+- Прочитати вхідний файл (`Files.readString`).
+- Реалізувати шифр Цезаря для 52-літерного англійського алфавіту (A..Z + a..z). Літера зсувається по колу в межах усього алфавіту; цифри, пробіли, розділові знаки і переходи рядка проходять без змін; вхідний файл не змінюється.
+- Записати результат у новий файл з міткою `[ENCRYPTED]` перед розширенням: `foo.txt` → `foo [ENCRYPTED].txt`.
+
+**Підказка:** базовий зсув — `(індекс літери в алфавіті + ключ) mod 52`. Нормалізуй ключ заздалегідь, щоб коректно обробляти від'ємні та великі значення: `((k % 52) + 52) % 52`.
+
+**Перевірка:**
+
+```bash
+./mvnw test -Dtest='MainTest$FileTests$EncryptFileTests,MainTest$EncryptEdgeCases,MainTest$OriginalFileSafety'
+./mvnw test -Dtest='MainTest$LanguageTests#encrypt'
+```
+
+**Готово, коли:** зеленіють обидва тести `EncryptFileTests`, усі 13 інвокацій `EncryptEdgeCases` (включно з параметризованим від'ємним ключем), `OriginalFileSafety`, і **англійські** інвокації `LanguageTests#encrypt` (4 з 8).
+
+---
+
+## Крок 2. Розшифрування (`-d`)
+
+**Що зробити:**
+
+- Гілка `-d` має робити операцію, зворотну до шифрування з тим самим ключем.
+- Вихідний файл — з міткою `[DECRYPTED]`. Якщо ім'я вхідного файлу містить `[ENCRYPTED]`, потрібно ЗАМІНИТИ цю мітку на `[DECRYPTED]` (а не додати поряд): `foo [ENCRYPTED].txt` → `foo [DECRYPTED].txt`.
+
+**Підказка:** розшифрування з ключем `k` — це шифрування з ключем `-k`. Якщо твоя функція шифрування чиста (приймає текст і ключ, нічого не змінює зовні), розшифрування — це фактично один виклик.
+
+**Перевірка:**
+
+```bash
+./mvnw test -Dtest='MainTest$FileTests$DecryptFileTests,MainTest$FileTests$DecryptFilenameTransformation'
+./mvnw test -Dtest='MainTest$LanguageTests#decrypt,MainTest$LanguageTests#fullCycle'
+```
+
+**Готово, коли:** повний цикл `encrypt → decrypt` повертає оригінал для «Гамлета»; англійські інвокації `LanguageTests#decrypt` (4 з 8) і `LanguageTests#fullCycle` (1 з 2) зелені.
+
+---
+
+## Крок 3. Перебір ключів (`-bf`)
+
+**Що зробити:**
+
+- Гілка `-bf` має відновити оригінал БЕЗ знання ключа. Результат — точна копія оригіналу (з урахуванням регістру).
+- Перебери кожен правдоподібний ключ. Для кожного варіанту обчисли «оцінку схожості на справжній текст». Вибери варіант з найкращою оцінкою.
+
+**Підказка:** два класичні підходи до оцінки кандидатів:
+
+- **Словниковий:** рахуй кількість входжень частих слів мови — «the», «and», «of», «is» для англ.; «що», «не», «і», «та», «у» для укр.
+- **Частотний:** порівняй розподіл частот літер у кандидаті з еталонним розподілом для мови (для англ. найчастіша літера — `e`; для укр. — `о`).
+
+Тест вимагає точного відновлення оригіналу, включно з регістром, — не просто «якогось читабельного зсуву».
+
+**Перевірка:**
+
+```bash
+./mvnw test -Dtest='MainTest$FileTests$BruteForceFileTests,MainTest$LanguageTests#bruteForce'
+```
+
+**Готово, коли:** brute-force над «Гамлетом» повертає текст точно як в оригіналі.
+
+---
+
+## Крок 4. Підтримка українського алфавіту
+
+**Що зробити:**
+
+- Додати 33-літерний український алфавіт: `А Б В Г Ґ Д Е Є Ж З И І Ї Й К Л М Н О П Р С Т У Ф Х Ц Ч Ш Щ Ь Ю Я` (+ малі літери).
+- Шифр і brute-force мають визначати, який алфавіт використати для конкретного файлу — наприклад, за переважанням літер у тексті.
+
+**Підказка:** найчистіша архітектура — окремий клас або інтерфейс, що описує алфавіт (наприклад, `Language`); шифр приймає його через конструктор або параметр. Тоді `EnglishLanguage` і `UkrainianLanguage` — це дві маленькі імплементації, а `Main` обирає мову на основі вмісту вхідного файлу.
+
+**Перевірка:**
+
+```bash
+./mvnw test -Dtest='MainTest$LanguageTests'
+```
+
+**Готово, коли:** усі 20 параметризованих інвокацій `LanguageTests` (8 шифрувань, 8 розшифрувань, 2 повних цикли, 2 brute-force) зелені для обох мов.
+
+---
+
+## Крок 5. Валідація аргументів
+
+**Що зробити:**
+
+- `Main.main` має ловити будь-який виняток і не пропускати його назовні.
+- На жоден з невалідних викликів програма не повинна створювати нових файлів.
+
+**Сценарії з тестів:** пропущений `-k`, пропущений `-f`, пропущена команда, невідомий прапорець, нечислове значення ключа, неіснуючий вхідний файл.
+
+**Підказка:** якщо ти зробив кроки 1–4 акуратно, цей крок зводиться до одного `try { ... } catch (Exception e) { ... }` у `Main.main` навколо всієї логіки. Тести валідації проходять навіть з порожнім `Main`, але легко регресують, коли ти додаєш реальну логіку, — постійно перезапускай їх.
+
+**Перевірка:**
+
+```bash
+./mvnw test -Dtest='MainTest$ValidationTests'
+```
+
+**Готово, коли:** усі сценарії валідації зелені, і жодна нова реалізація не виводить винятки назовні.
+
+---
+
+## Крок 6. Зборка jar-а для GitHub Release
+
+```bash
+./mvnw package
+```
+
+Збирає `target/J4-M1-FP-1.0-SNAPSHOT.jar`. Перевір вручну на власних даних:
+
+```bash
+java -jar target/J4-M1-FP-1.0-SNAPSHOT.jar -e -k 5 -f src/main/resources/input.txt
+java -jar target/J4-M1-FP-1.0-SNAPSHOT.jar -d -k 5 -f "src/main/resources/input [ENCRYPTED].txt"
+java -jar target/J4-M1-FP-1.0-SNAPSHOT.jar -bf -f "src/main/resources/input [ENCRYPTED].txt"
+```
+
+Завантаж jar у **GitHub Releases** на твоєму форку і відкрий Pull Request до основного репозиторію.
