@@ -7,23 +7,20 @@ import java.nio.file.Path;
 
 public class CaesarCipher {
 
-    private static final String ENG_UPPER = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    private static final String ENG_LOWER = "abcdefghijklmnopqrstuvwxyz";
-    private static final String UA_UPPER =  "АБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ";
-    private static final String UA_LOWER =  "абвгґдеєжзиіїйклмнопрстуфхцчшщьюя";
+    private static final String ENG_ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private static final String UA_ALPHABET  = "абвгґдеєжзиіїйклмнопрстуфхцчшщьюяАБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ";
+
 
     public char encryptChar(char ch, int key) {
         String strongAlphabet = null;
 
-        if(ENG_LOWER.indexOf(ch) != -1) strongAlphabet = ENG_LOWER;
-        else if(ENG_UPPER.indexOf(ch) != -1) strongAlphabet = ENG_UPPER;
-        else if (UA_LOWER.indexOf(ch) != -1) strongAlphabet = UA_LOWER;
-        else if (UA_UPPER.indexOf(ch) != -1) strongAlphabet = UA_UPPER;
+        if(ENG_ALPHABET.indexOf(ch) != -1) strongAlphabet = ENG_ALPHABET;
+          else if(UA_ALPHABET.indexOf(ch) != -1) strongAlphabet = UA_ALPHABET;
+
 
         if(strongAlphabet == null) {
             return ch;
         }
-
 
             int alphabetLength = strongAlphabet.length();
         int index = strongAlphabet.indexOf(ch);
@@ -33,14 +30,6 @@ public class CaesarCipher {
 
           char resultChar = strongAlphabet.charAt(newIndex);
 
-          if(key < 0 && (index + key) < 0 && Math.abs(key) < alphabetLength){
-              if(Character.isLowerCase(resultChar)){
-                  return Character.toUpperCase(resultChar);
-              } else if(Character.isUpperCase(resultChar)){
-                  return Character.toLowerCase(resultChar);
-              }
-          }
-//Math.abs(key) < alphabetLength.
         return  resultChar;
 
     }
