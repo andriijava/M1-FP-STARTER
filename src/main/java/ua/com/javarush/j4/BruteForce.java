@@ -3,7 +3,7 @@ package ua.com.javarush.j4;
 import java.util.Set;
 
 public class BruteForce {
-    public static int finKey(String text, CaesarCipher cipher) {
+    public static int findKey(String text, CaesarCipher cipher) {
         // Длина самого большого алфавита (украинского) — 66 символов.
        // Перебираем ключи от 0 до 65.
 

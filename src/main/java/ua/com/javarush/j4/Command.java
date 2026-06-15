@@ -3,6 +3,6 @@ package ua.com.javarush.j4;
 public enum Command {
   ENCRYPT,
   DECRYPT,
-  BRUTEFORCE;
+  BRUTE_FORCE;
 }
 
